@@ -9,10 +9,23 @@ public_users.post("/register", (req,res) => {
     const username = req.body.username;
     const password = req.body.password;
 
-    if (!username || !password){
-        return res.status(404).json({message:""})
+    if (!username && !password){
+        return res.status(400).json({message:"Try again, the username and password were omitted"})
+    } 
+    if (!username){
+        return res.status(400).json({message:"Try again, the username  were omitted"})
+    } 
+    if (!password){
+        return res.status(400).json({message:"Try again, the password  were omitted"})
+    } 
+    if (isValid(username)){
+        return res.status(400).json({message:"Try again, username already exist."})
     }
-    return res.status(200).json({message: "Yet to be implemented"});
+    users.push({
+        "username": username,
+        "password": password
+    });
+    return res.status(201).json({message: `Registration completed, username: ${username} added to users.`});
 });
 
 // Get the book list available in the shop
@@ -32,23 +45,32 @@ public_users.get('/isbn/:isbn',function (req, res) {
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
     const author = req.params.author;
-    let filtered_books = books.entries().filter((book) => book.author.includes(author));
-    if (filtered_books.length == 0) {
+    let result = {};
+    for (const isbn in books){
+        if (books[isbn].author.includes(author)) {
+            result[isbn] = books[isbn];
+        }
+    }
+    if (Object.keys(result).length === 0) {
         return res.status(404).json({message: `No matches for books with author: ${author}.`});
     }
-  return res.status(200).send(JSON.stringify(filtered_books));
+  return res.status(200).send(JSON.stringify(result));
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
     const title = req.params.title;
     let booksArray = Object.entries(books);
-    let filtered_books = booksArray.filter(([isbn, book]) => {
-    book.title.includes(title);});
-    if (filtered_books.length === 0) {
+    let result = {};
+    for (const isbn in books){
+        if (books[isbn].title.includes(title)) {
+            result[isbn] = books[isbn];
+        }
+    }
+    if (Object.keys(result).length === 0) {
         return res.status(404).json({message: `No matches for books with title: ${title}.`});
     }
-  return res.status(200).send(JSON.stringify(filtered_books));
+  return res.status(200).send(JSON.stringify(result));
 });
 
 //  Get book review
