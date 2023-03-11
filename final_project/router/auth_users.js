@@ -26,10 +26,10 @@ regd_users.post("/login", (req,res) => {
         return res.status(400).json({message:"Try again, the username and password were omitted"})
     } 
     if (!username){
-        return res.status(400).json({message:"Try again, the username  were omitted"})
+        return res.status(400).json({message:"Try again, the username was omitted"})
     } 
     if (!password){
-        return res.status(400).json({message:"Try again, the password  were omitted"})
+        return res.status(400).json({message:"Try again, the password was omitted"})
     }
     if (authenticatedUser(username, password)){
         let accessToken = jwt.sign({
@@ -38,15 +38,18 @@ regd_users.post("/login", (req,res) => {
         req.session.authorization = {
             accessToken,
             username}
-            return res.status(200).json({message: `Login Successful, welcome ${username}`});
+        return res.status(200).json({message: `Login Successful, welcome ${username}`});
     }
     return res.status(401).json({message: `Login Failed!`});
 });
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+    const review = req.query.review;
+    const username = req.session.user;
+    let valid_credentials = users.find((account) => {
+        return account.username === username && account.password === password;
+    });
 });
 
 module.exports.authenticated = regd_users;

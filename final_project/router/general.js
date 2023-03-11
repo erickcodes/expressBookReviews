@@ -13,10 +13,10 @@ public_users.post("/register", (req,res) => {
         return res.status(400).json({message:"Try again, the username and password were omitted"})
     } 
     if (!username){
-        return res.status(400).json({message:"Try again, the username  were omitted"})
+        return res.status(400).json({message:"Try again, the username was omitted"})
     } 
     if (!password){
-        return res.status(400).json({message:"Try again, the password  were omitted"})
+        return res.status(400).json({message:"Try again, the password was omitted"})
     } 
     if (isValid(username)){
         return res.status(400).json({message:"Try again, username already exist."})
@@ -71,6 +71,10 @@ public_users.get('/title/:title',function (req, res) {
         return res.status(404).json({message: `No matches for books with title: ${title}.`});
     }
   return res.status(200).send(JSON.stringify(result));
+});
+
+public_users.get('/users',function (req, res) {
+    return res.status(200).send(users);
 });
 
 //  Get book review
