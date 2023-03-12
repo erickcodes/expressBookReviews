@@ -47,8 +47,9 @@ public_users.get('/isbn/:isbn', (req, res) => {
     validationPromise = new Promise(function(resolve, reject) {
         if (books.hasOwnProperty(isbn)) {
             resolve({[isbn] : books[isbn]}); 
-        }
+        } else {
             reject({message: `Book match with ISBN: ${isbn} not found.`}); 
+        }
     });
     validationPromise.then(
         (value) => res.status(200).send(JSON.stringify(value)), 
