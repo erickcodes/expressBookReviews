@@ -45,7 +45,6 @@ public_users.get('/', runAsyncWrapper(async (req, res) => {
 public_users.get('/isbn/:isbn', (req, res) => {
     let isbn = req.params.isbn;
     validationPromise = new Promise(function(resolve, reject) {
-        // "Producing Code" (May take some time)
         if (books.hasOwnProperty(isbn)) {
             resolve({[isbn] : books[isbn]}); 
         }
