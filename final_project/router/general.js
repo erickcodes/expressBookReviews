@@ -42,14 +42,20 @@ public_users.get('/', runAsyncWrapper(async (req, res) => {
 }));
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn', runAsyncWrapper(async (req, res) => {
+public_users.get('/isbn/:isbn', (req, res) => {
     let isbn = req.params.isbn;
-    const validISBN = await books.hasOwnProperty(isbn);
-    if (!validISBN) {
-        return res.status(404).json({message: `Book match with ISBN: ${isbn} not found.`});
-    }
-    return res.status(200).send(JSON.stringify({[isbn] : books[isbn]}));
- }));
+    validationPromise = new Promise(function(resolve, reject) {
+        // "Producing Code" (May take some time)
+        if (books.hasOwnProperty(isbn)) {
+            resolve({[isbn] : books[isbn]}); 
+        }
+            reject({message: `Book match with ISBN: ${isbn} not found.`}); 
+    });
+    validationPromise.then(
+        (value) => res.status(200).send(JSON.stringify(value)), 
+        (error) => res.status(404).json({message: error})
+    );
+ });
   
 
 // Get book details based on author
