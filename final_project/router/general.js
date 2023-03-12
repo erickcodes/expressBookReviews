@@ -4,8 +4,15 @@ let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
+function runAsyncWrapper (callback) {
+    return function (req, res, next) {
+      callback(req, res, next)
+        .catch(next)
+    }
+  }
 
-public_users.post("/register", (req,res) => {
+
+public_users.post("/register", runAsyncWrapper(async (req,res) => {
     const username = req.body.username;
     const password = req.body.password;
 
@@ -18,72 +25,85 @@ public_users.post("/register", (req,res) => {
     if (!password){
         return res.status(400).json({message:"Try again, the password was omitted"})
     } 
-    if (isValid(username)){
+    if (await isValid(username)){
         return res.status(400).json({message:"Try again, username already exist."})
     }
-    users.push({
+    await users.push({
         "username": username,
         "password": password
     });
     return res.status(201).json({message: `Registration completed, username: ${username} added to users.`});
-});
+}));
 
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
-    return res.status(200).send(JSON.stringify(books));
-});
+public_users.get('/', runAsyncWrapper(async (req, res) => {
+    const result = await JSON.stringify(books);
+    return res.status(200).send(result);
+}));
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
+public_users.get('/isbn/:isbn', runAsyncWrapper(async (req, res) => {
     let isbn = req.params.isbn;
-    if (!books.hasOwnProperty(isbn)) {
+    const validISBN = await books.hasOwnProperty(isbn);
+    if (!validISBN) {
         return res.status(404).json({message: `Book match with ISBN: ${isbn} not found.`});
     }
     return res.status(200).send(JSON.stringify({[isbn] : books[isbn]}));
- });
+ }));
   
+
 // Get book details based on author
-public_users.get('/author/:author',function (req, res) {
+public_users.get('/author/:author', runAsyncWrapper(async (req, res) => {
     const author = req.params.author;
-    let result = {};
-    for (const isbn in books){
-        if (books[isbn].author.includes(author)) {
-            result[isbn] = books[isbn];
-        }
-    }
+    const result = await searchBooksAuthor(author);
     if (Object.keys(result).length === 0) {
         return res.status(404).json({message: `No matches for books with author: ${author}.`});
     }
   return res.status(200).send(JSON.stringify(result));
-});
+}));
 
 // Get all books based on title
-public_users.get('/title/:title',function (req, res) {
+public_users.get('/title/:title', runAsyncWrapper(async (req, res) => {
     const title = req.params.title;
-    let booksArray = Object.entries(books);
+    const result = await searchBooksTitle(title);
+    if (Object.keys(result).length === 0) {
+        return res.status(404).json({message: `No matches for books with title: ${title}.`});
+    }
+  return res.status(200).send(JSON.stringify(result));
+}));
+
+//  Get book review
+public_users.get('/review/:isbn', runAsyncWrapper(async (req, res) => {
+    const isbn = req.params.isbn;
+    const validISBN = await books.hasOwnProperty(isbn);
+    if (!validISBN) {
+        return res.status(404).json({message: `Book match with ISBN: ${isbn} not found.`});
+    }
+    const reviews = await books[isbn].reviews;
+    return res.status(200).send(JSON.stringify(reviews));
+}));
+
+//hoisted searching books for books containing parameter title
+function searchBooksTitle(title) {
     let result = {};
     for (const isbn in books){
         if (books[isbn].title.includes(title)) {
             result[isbn] = books[isbn];
         }
     }
-    if (Object.keys(result).length === 0) {
-        return res.status(404).json({message: `No matches for books with title: ${title}.`});
-    }
-  return res.status(200).send(JSON.stringify(result));
-});
+    return result;
+}
 
-public_users.get('/users',function (req, res) {
-    return res.status(200).send(users);
-});
-
-//  Get book review
-public_users.get('/review/:isbn',function (req, res) {
-    const isbn = req.params.isbn;
-    if (!books.hasOwnProperty(isbn)) {
-        return res.status(404).json({message: `Book match with ISBN: ${isbn} not found.`});
+//hoisted searching books for books containing parameter author
+function searchBooksAuthor(author) {
+    let result = {};
+    for (const isbn in books){
+        if (books[isbn].author.includes(author)) {
+            result[isbn] = books[isbn];
+        }
     }
-    return res.status(200).send(JSON.stringify({[isbn] : books[isbn]}));
-});
+    return result;
+}
+
 
 module.exports.general = public_users;

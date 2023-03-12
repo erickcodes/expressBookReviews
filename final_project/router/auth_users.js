@@ -51,7 +51,10 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     for (review_username in books[isbn].reviews){
         if (review_username === client_username){
             books[isbn].reviews[client_username] = review;
-            return res.status(200).json({message: 'Updated your previous review.'});
+            return res.status(200).json({
+                message: 'Updated your previous review.',
+                [books[isbn].title]: books[isbn].reviews
+            });
         }
     }
     books[isbn].reviews[client_username] = review;
@@ -65,7 +68,10 @@ regd_users.delete("/auth/review/:isbn", (req, res) => {
     for (review_username in books[isbn].reviews){
         if (review_username === client_username){
             delete books[isbn].reviews[client_username];
-            return res.status(200).json({message: 'Deleted your previous review.'});
+            return res.status(200).json({
+                message: 'Deleted your previous review.',
+                [books[isbn].title]: books[isbn].reviews
+        });
         }
     }
     return res.status(200).json({message: 'No review to delete.'});
